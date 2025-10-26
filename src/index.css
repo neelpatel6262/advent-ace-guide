@@ -8,28 +8,28 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Travel-inspired color palette */
-    --background: 210 100% 98%;
-    --foreground: 220 40% 15%;
+    /* Travel-inspired color palette with improved contrast */
+    --background: 0 0% 100%;
+    --foreground: 220 60% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 40% 15%;
+    --card-foreground: 220 60% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 40% 15%;
+    --popover-foreground: 220 60% 10%;
 
-    /* Ocean blue primary */
-    --primary: 217 91% 60%;
+    /* Ocean blue primary with better contrast */
+    --primary: 217 91% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 199 89% 48%;
+    --primary-glow: 199 89% 45%;
 
     /* Sunset coral secondary */
-    --secondary: 24 95% 53%;
+    --secondary: 24 95% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Soft muted tones */
+    /* Soft muted tones with improved readability */
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 25% 35%;
 
     /* Adventure green accent */
     --accent: 142 76% 36%;
@@ -38,42 +38,42 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 217 91% 55%;
 
     --radius: 0.75rem;
 
     /* Gradients for beautiful backgrounds */
-    --gradient-ocean: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(199 89% 48%) 100%);
-    --gradient-sunset: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(340 82% 52%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(210 100% 98%) 0%, hsl(217 91% 95%) 100%);
+    --gradient-ocean: linear-gradient(135deg, hsl(217 91% 55%) 0%, hsl(199 89% 45%) 100%);
+    --gradient-sunset: linear-gradient(135deg, hsl(24 95% 50%) 0%, hsl(340 82% 52%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(217 91% 98%) 100%);
     
     /* Shadows with color */
-    --shadow-ocean: 0 10px 30px -10px hsl(217 91% 60% / 0.3);
-    --shadow-sunset: 0 10px 30px -10px hsl(24 95% 53% / 0.3);
+    --shadow-ocean: 0 10px 30px -10px hsl(217 91% 55% / 0.3);
+    --shadow-sunset: 0 10px 30px -10px hsl(24 95% 50% / 0.3);
     
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-foreground: 240 8% 20%;
+    --sidebar-primary: 217 91% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 217 91% 60%;
+    --sidebar-accent-foreground: 217 91% 55%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 217 91% 55%;
   }
 
   .dark {
-    --background: 220 40% 8%;
+    --background: 220 50% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 220 40% 10%;
+    --card: 220 45% 9%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 40% 10%;
+    --popover: 220 45% 9%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217 91% 60%;
@@ -82,8 +82,8 @@ All colors MUST be HSL.
     --secondary: 24 95% 53%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217 40% 15%;
+    --muted-foreground: 215 25% 70%;
 
     --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
@@ -91,17 +91,17 @@ All colors MUST be HSL.
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 217 40% 15%;
+    --input: 217 40% 15%;
     --ring: 217 91% 60%;
     
-    --sidebar-background: 220 40% 8%;
+    --sidebar-background: 220 50% 6%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent: 217 40% 15%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-border: 217 40% 15%;
     --sidebar-ring: 217 91% 60%;
   }
 }
@@ -112,6 +112,10 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
   }
 }

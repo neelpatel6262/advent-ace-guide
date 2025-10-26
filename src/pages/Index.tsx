@@ -57,11 +57,11 @@ const Index = () => {
         <div className="relative z-10 text-center px-4 space-y-6 max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Plane className="w-12 h-12 text-white drop-shadow-lg" />
-            <h1 className="text-5xl md:text-7xl font-bold text-white drop-shadow-2xl">
+            <h1 className="text-5xl md:text-7xl font-display font-bold text-white drop-shadow-2xl tracking-tight">
               TripCraft AI
             </h1>
           </div>
-          <p className="text-xl md:text-2xl text-white/95 drop-shadow-lg max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-white/95 drop-shadow-lg max-w-2xl mx-auto font-medium leading-relaxed">
             Your personal AI travel planner. Create perfect itineraries in seconds, tailored to your dreams.
           </p>
         </div>
@@ -84,8 +84,8 @@ const Index = () => {
       )}
 
       {/* Footer */}
-      <footer className="py-8 text-center text-muted-foreground border-t">
-        <p className="text-sm">
+      <footer className="py-8 text-center text-muted-foreground border-t bg-card/50 backdrop-blur-sm">
+        <p className="text-sm font-medium">
           Powered by AI • Built with ❤️ for travelers
         </p>
       </footer>

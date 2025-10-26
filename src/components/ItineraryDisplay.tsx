@@ -12,11 +12,11 @@ export const ItineraryDisplay = ({ itinerary, destination }: ItineraryDisplayPro
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+      <div className="text-center space-y-2 mb-8">
+        <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
           Your Perfect {destination} Adventure
         </h2>
-        <p className="text-muted-foreground">AI-crafted itinerary tailored just for you</p>
+        <p className="text-base text-muted-foreground font-medium">AI-crafted itinerary tailored just for you</p>
       </div>
 
       <div className="space-y-4">
@@ -29,10 +29,10 @@ export const ItineraryDisplay = ({ itinerary, destination }: ItineraryDisplayPro
           return (
             <Card 
               key={index} 
-              className="shadow-[var(--shadow-ocean)] hover:shadow-[var(--shadow-sunset)] transition-all duration-300 hover:scale-[1.01]"
+              className="shadow-[var(--shadow-ocean)] hover:shadow-[var(--shadow-sunset)] transition-all duration-300 hover:scale-[1.01] border-2"
             >
-              <CardHeader className={isDay ? "bg-gradient-to-r from-primary/10 to-primary-glow/10 border-b" : ""}>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className={isDay ? "bg-gradient-to-r from-primary/10 to-primary-glow/10 border-b-2" : ""}>
+                <CardTitle className="flex items-center gap-2 text-xl font-display">
                   {isDay ? (
                     <>
                       <Calendar className="w-5 h-5 text-primary" />
@@ -46,7 +46,7 @@ export const ItineraryDisplay = ({ itinerary, destination }: ItineraryDisplayPro
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-4">
+              <CardContent className="pt-6 pb-6">
                 <div className="prose prose-sm max-w-none">
                   {section.split('\n').slice(isDay ? 1 : 0).map((line, lineIndex) => {
                     if (!line.trim()) return null;
@@ -60,20 +60,20 @@ export const ItineraryDisplay = ({ itinerary, destination }: ItineraryDisplayPro
                     
                     let icon = null;
                     if (isMorning || isAfternoon || isEvening) {
-                      icon = <Camera className="w-4 h-4 text-primary inline mr-2" />;
+                      icon = <Camera className="w-4 h-4 text-primary inline mr-2 flex-shrink-0 mt-1" />;
                     } else if (isDining) {
-                      icon = <Utensils className="w-4 h-4 text-secondary inline mr-2" />;
+                      icon = <Utensils className="w-4 h-4 text-secondary inline mr-2 flex-shrink-0 mt-1" />;
                     } else if (line.startsWith('•') || line.startsWith('-')) {
-                      icon = <MapPin className="w-4 h-4 text-accent inline mr-2" />;
+                      icon = <MapPin className="w-4 h-4 text-accent inline mr-2 flex-shrink-0 mt-1" />;
                     }
                     
                     return (
                       <p 
                         key={lineIndex} 
-                        className="mb-2 leading-relaxed text-foreground flex items-start"
+                        className="mb-3 leading-relaxed text-foreground flex items-start gap-1"
                       >
                         {icon}
-                        <span className={isMorning || isAfternoon || isEvening ? "font-semibold" : ""}>
+                        <span className={isMorning || isAfternoon || isEvening ? "font-semibold text-base" : "text-base"}>
                           {line.replace(/^[•\-]\s*/, '')}
                         </span>
                       </p>
