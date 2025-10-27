@@ -5,45 +5,97 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type GenerateBody = {
+  destination: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  travelers: string | number;
+  interests: string;
+  budget: string;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { destination, startDate, endDate, travelers, interests, budget } = await req.json();
-    
-    console.log("Generating itinerary for:", { destination, startDate, endDate, travelers, interests, budget });
+    const { destination, startDate, endDate, travelers, interests, budget } = (await req.json()) as GenerateBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Calculate trip duration
+    // Compute trip length (1-based inclusive)
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
 
-    // Create a detailed prompt for the AI
-    const prompt = `Create a detailed ${days}-day travel itinerary for ${destination} for ${travelers} traveler(s).
+    const systemPrompt = "You are an expert travel planner. Always return structured results via the provided function tool. Times must be realistic and chronological. Keep descriptions concise.";
 
-Travel Details:
-- Dates: ${startDate} to ${endDate} (${days} days)
-- Budget: ${budget}
-- Interests: ${interests}
+    // Define a tool to force structured output
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "return_itinerary",
+          description: "Return a complete, structured itinerary for the given trip.",
+          parameters: {
+            type: "object",
+            properties: {
+              destination: { type: "string" },
+              days: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    day: { type: "integer", minimum: 1 },
+                    date: { type: "string", description: "ISO date YYYY-MM-DD" },
+                    summary: { type: "string" },
+                    items: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          title: { type: "string" },
+                          type: { type: "string", enum: ["activity", "meal", "transport", "evening"] },
+                          timeStart: { type: "string", description: "HH:MM 24h" },
+                          timeEnd: { type: "string", description: "HH:MM 24h", nullable: true },
+                          location: { type: "string" },
+                          cost: { type: "string", description: "Estimated cost incl. currency", nullable: true },
+                          description: { type: "string" },
+                          highlights: { type: "array", items: { type: "string" } },
+                        },
+                        required: ["title", "type", "timeStart", "location", "description", "highlights"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ["day", "items"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["destination", "days"],
+            additionalProperties: false,
+          },
+        },
+      },
+    ];
 
-Please create a day-by-day itinerary that includes:
-1. Morning, afternoon, and evening activities
-2. Specific attractions, restaurants, and experiences
-3. Practical tips and local recommendations
-4. Travel time between locations
-5. Budget-appropriate suggestions
+    const userPrompt = `Create a ${days}-day itinerary for ${destination} for ${travelers} traveler(s).
+Dates: ${startDate} to ${endDate}
+Budget: ${budget}
+Interests: ${interests}
 
-Format the response with clear sections for each day (Day 1, Day 2, etc.) and use bullet points for activities.
-Make it engaging, practical, and personalized to the traveler's interests.`;
+Rules:
+- For each day, produce 3–5 items following this sequence when possible: Morning activity, Midday activity, Meal, Afternoon/Evening activity.
+- Include realistic times (e.g., 09:00–11:00), location names, short descriptions, and 2–4 bullet highlights.
+- Costs should be concise (e.g., "$15", "€20–30", "Free").
+- Optimize for minimal backtracking between locations.
+- Use local, authentic options aligned to the budget.
+`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -52,65 +104,60 @@ Make it engaging, practical, and personalized to the traveler's interests.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          {
-            role: "system",
-            content: "You are an expert travel planner with deep knowledge of destinations worldwide. Create detailed, practical, and exciting travel itineraries that match the traveler's interests and budget.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
+        tools,
+        tool_choice: { type: "function", function: { name: "return_itinerary" } },
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits depleted. Please add credits to continue." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway error");
+    if (!aiResp.ok) {
+      if (aiResp.status === 429)
+        return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResp.status === 402)
+        return new Response(JSON.stringify({ error: "Payment required, please add credits to your Lovable AI workspace." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const t = await aiResp.text();
+      console.error("AI gateway error:", aiResp.status, t);
+      return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const data = await response.json();
-    const itinerary = data.choices?.[0]?.message?.content;
+    const raw = await aiResp.json();
 
-    if (!itinerary) {
-      throw new Error("No itinerary generated");
+    // Try to extract tool call arguments
+    let itinerary_json: unknown | null = null;
+    try {
+      const toolCalls = raw.choices?.[0]?.message?.tool_calls;
+      if (toolCalls && toolCalls.length > 0) {
+        const argStr = toolCalls[0]?.function?.arguments;
+        if (typeof argStr === "string") {
+          itinerary_json = JSON.parse(argStr);
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse tool arguments:", e);
     }
 
-    console.log("Itinerary generated successfully");
-
-    return new Response(
-      JSON.stringify({ itinerary }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Fallback: attempt to parse content as JSON (if model didn't use tool calling)
+    if (!itinerary_json) {
+      const content = raw.choices?.[0]?.message?.content as string | undefined;
+      if (!content) throw new Error("No itinerary content returned");
+      const cleaned = content.trim().replace(/^```(json)?/i, "").replace(/```$/, "");
+      try {
+        itinerary_json = JSON.parse(cleaned);
+      } catch {
+        // As last resort, wrap plain text
+        itinerary_json = {
+          destination,
+          days: Array.from({ length: days }, (_, i) => ({ day: i + 1, summary: "", items: [] })),
+          raw: content,
+        };
       }
-    );
+    }
+
+    return new Response(JSON.stringify({ itinerary_json }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    console.error("Error in generate-itinerary function:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    console.error("Error in generate-itinerary:", error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
