@@ -1,45 +1,79 @@
 import { useState } from "react";
 import { ItineraryForm, FormData } from "@/components/ItineraryForm";
 import { ItineraryDisplay } from "@/components/ItineraryDisplay";
+import { LoadingState } from "@/components/LoadingState";
+import { ErrorState } from "@/components/ErrorState";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plane } from "lucide-react";
 import heroImage from "@/assets/hero-travel.jpg";
 
+interface ItineraryJSON {
+  destination: string;
+  days: Array<{
+    day: number;
+    date?: string;
+    summary?: string;
+    items: Array<{
+      title: string;
+      type: "activity" | "meal" | "transport" | "evening";
+      timeStart: string;
+      timeEnd?: string;
+      location: string;
+      cost?: string;
+      description: string;
+      highlights: string[];
+    }>;
+  }>;
+  raw?: string;
+}
+
 const Index = () => {
-  const [itinerary, setItinerary] = useState<string>("");
-  const [destination, setDestination] = useState<string>("");
+  const [itineraryData, setItineraryData] = useState<ItineraryJSON | null>(null);
+  const [formData, setFormData] = useState<FormData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
   const { toast } = useToast();
 
-  const handleGenerate = async (formData: FormData) => {
+  const handleGenerate = async (data: FormData) => {
     setIsLoading(true);
-    setItinerary("");
+    setItineraryData(null);
+    setError("");
+    setFormData(data);
     
     try {
-      const { data, error } = await supabase.functions.invoke("generate-itinerary", {
-        body: formData,
+      const { data: response, error: invokeError } = await supabase.functions.invoke("generate-itinerary", {
+        body: data,
       });
 
-      if (error) throw error;
+      if (invokeError) throw invokeError;
 
-      if (data?.itinerary) {
-        setItinerary(data.itinerary);
-        setDestination(formData.destination);
+      if (response?.itinerary_json) {
+        setItineraryData(response.itinerary_json);
         toast({
           title: "Itinerary Generated!",
           description: "Your personalized travel plan is ready.",
         });
+      } else {
+        throw new Error("No itinerary data received");
       }
-    } catch (error) {
-      console.error("Error generating itinerary:", error);
+    } catch (err: any) {
+      console.error("Error generating itinerary:", err);
+      const errorMessage = err?.message || "Unable to create your itinerary. Please try again.";
+      setError(errorMessage);
       toast({
         title: "Generation Failed",
-        description: "Unable to create your itinerary. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (formData) {
+      handleGenerate(formData);
     }
   };
 
@@ -74,11 +108,29 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Results Section */}
-      {itinerary && (
+      {/* Loading Section */}
+      {isLoading && (
         <section className="py-12 px-4 bg-background/50 backdrop-blur-sm">
           <div className="container mx-auto">
-            <ItineraryDisplay itinerary={itinerary} destination={destination} />
+            <LoadingState />
+          </div>
+        </section>
+      )}
+
+      {/* Error Section */}
+      {error && !isLoading && (
+        <section className="py-12 px-4 bg-background/50 backdrop-blur-sm">
+          <div className="container mx-auto">
+            <ErrorState message={error} onRetry={handleRetry} />
+          </div>
+        </section>
+      )}
+
+      {/* Results Section */}
+      {itineraryData && !isLoading && formData && (
+        <section className="py-12 px-4 bg-background/50 backdrop-blur-sm">
+          <div className="container mx-auto">
+            <ItineraryDisplay itineraryData={itineraryData} formData={formData} />
           </div>
         </section>
       )}
