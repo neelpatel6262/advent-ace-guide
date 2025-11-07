@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ItineraryCard } from "./ItineraryCard";
 import { WeatherWidget } from "./WeatherWidget";
-import { Download, Share2 } from "lucide-react";
+import { ShareModal } from "./ShareModal";
+import { AuthPromptModal } from "./AuthPromptModal";
+import { Download, Share2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,11 +46,27 @@ interface ItineraryDisplayProps {
 
 export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayProps) => {
   const { toast } = useToast();
+  const [savedItineraryId, setSavedItineraryId] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    setIsSaving(true);
+    
     try {
-      const { error } = await supabase.from("itineraries").insert([
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setShowAuthPrompt(true);
+        setIsSaving(false);
+        return;
+      }
+
+      const { data, error } = await supabase.from("itineraries").insert([
         {
+          user_id: session.user.id,
           destination: formData.destination,
           start_date: formData.startDate,
           end_date: formData.endDate,
@@ -57,12 +76,14 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
           itinerary_data: itineraryData as any,
           is_favorite: false,
         }
-      ]);
+      ]).select().single();
 
       if (error) throw error;
 
+      setSavedItineraryId(data.id);
+      
       toast({
-        title: "Saved!",
+        title: "✅ Itinerary saved!",
         description: "Your itinerary has been saved successfully.",
       });
     } catch (error) {
@@ -72,29 +93,19 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
         description: "Unable to save your itinerary. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleShare = async () => {
-    const shareText = `Check out my ${formData.destination} itinerary created with TripCraft AI!`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${formData.destination} Itinerary`,
-          text: shareText,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log("Share cancelled");
-      }
-    } else {
-      navigator.clipboard.writeText(shareText + "\n" + window.location.href);
-      toast({
-        title: "Link Copied!",
-        description: "Itinerary link copied to clipboard.",
-      });
+    // If not saved yet, save it first
+    if (!savedItineraryId) {
+      await handleSave();
+      return;
     }
+    
+    setShowShareModal(true);
   };
 
   const handleDownload = () => {
@@ -127,11 +138,20 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
 
         {/* Action buttons */}
         <div className="flex flex-wrap justify-center gap-3 mt-4">
-          <Button onClick={handleSave} variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Save Itinerary
+          <Button 
+            onClick={handleSave} 
+            variant="default" 
+            className="gap-2"
+            disabled={isSaving || !!savedItineraryId}
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? "Saving..." : savedItineraryId ? "Saved!" : "Save Itinerary"}
           </Button>
-          <Button onClick={handleShare} variant="outline" className="gap-2">
+          <Button 
+            onClick={handleShare} 
+            variant="outline" 
+            className="gap-2"
+          >
             <Share2 className="w-4 h-4" />
             Share
           </Button>
@@ -158,6 +178,21 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
           <pre className="whitespace-pre-wrap text-sm">{itineraryData.raw}</pre>
         </div>
       )}
+
+      {/* Modals */}
+      {savedItineraryId && (
+        <ShareModal
+          open={showShareModal}
+          onOpenChange={setShowShareModal}
+          itineraryId={savedItineraryId}
+          destination={itineraryData.destination}
+        />
+      )}
+      
+      <AuthPromptModal
+        open={showAuthPrompt}
+        onOpenChange={setShowAuthPrompt}
+      />
     </div>
   );
 };
