@@ -118,7 +118,7 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
       <div className="text-center space-y-4 mb-8">
-        <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
           Your Perfect {itineraryData.destination} Adventure
         </h2>
         <p className="text-base text-muted-foreground font-medium">
