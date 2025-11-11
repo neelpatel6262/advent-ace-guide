@@ -31,21 +31,6 @@ export const ShareModal = ({ open, onOpenChange, itineraryId, destination }: Sha
     }
   };
 
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`Check out my ${destination} itinerary created with TripCraft AI! ${shareUrl}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  };
-
-  const handleEmailShare = () => {
-    const subject = encodeURIComponent(`${destination} Itinerary`);
-    const body = encodeURIComponent(`Check out my ${destination} itinerary created with TripCraft AI!\n\n${shareUrl}`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  };
-
-  const handleFacebookShare = () => {
-    const url = encodeURIComponent(shareUrl);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,25 +45,11 @@ export const ShareModal = ({ open, onOpenChange, itineraryId, destination }: Sha
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Input value={shareUrl} readOnly className="flex-1" />
-            <Button size="icon" variant="outline" onClick={handleCopyLink}>
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <Button onClick={handleWhatsAppShare} variant="outline" className="w-full">
-              WhatsApp
-            </Button>
-            <Button onClick={handleEmailShare} variant="outline" className="w-full">
-              Email
-            </Button>
-            <Button onClick={handleFacebookShare} variant="outline" className="w-full">
-              Facebook
-            </Button>
-          </div>
+        <div className="flex items-center gap-2">
+          <Input value={shareUrl} readOnly className="flex-1" />
+          <Button size="icon" variant="outline" onClick={handleCopyLink}>
+            <Copy className="w-4 h-4" />
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

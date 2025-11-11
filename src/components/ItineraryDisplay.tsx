@@ -4,9 +4,10 @@ import { ItineraryCard } from "./ItineraryCard";
 import { WeatherWidget } from "./WeatherWidget";
 import { ShareModal } from "./ShareModal";
 import { AuthPromptModal } from "./AuthPromptModal";
-import { Download, Share2, Save } from "lucide-react";
+import { FileDown, Share2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
 
 interface ItineraryItem {
   title: string;
@@ -108,20 +109,56 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
     setShowShareModal(true);
   };
 
-  const handleDownload = () => {
-    const blob = new Blob([JSON.stringify(itineraryData, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${formData.destination.replace(/\s+/g, "-")}-itinerary.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handlePDFExport = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = 20;
 
+    // Title
+    doc.setFontSize(20);
+    doc.text(itineraryData.destination, pageWidth / 2, yPos, { align: "center" });
+    yPos += 10;
+
+    // Duration
+    doc.setFontSize(12);
+    doc.text(`${formData.travelers} traveler(s) | ${formData.budget} budget`, pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
+    // Days
+    itineraryData.days.forEach((dayData) => {
+      // Day header
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text(`Day ${dayData.day}`, 20, yPos);
+      yPos += 8;
+
+      // Activities
+      dayData.items.forEach((item) => {
+        doc.setFontSize(10);
+        doc.setFont(undefined, "normal");
+        
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        doc.text(`${item.timeStart} - ${item.title}`, 25, yPos);
+        yPos += 6;
+        
+        const lines = doc.splitTextToSize(item.description, pageWidth - 50);
+        doc.setFontSize(9);
+        doc.text(lines, 25, yPos);
+        yPos += lines.length * 5 + 5;
+      });
+
+      yPos += 5;
+    });
+
+    doc.save(`${formData.destination.replace(/\s+/g, "-")}-itinerary.pdf`);
+    
     toast({
-      title: "Downloaded!",
-      description: "Your itinerary has been downloaded.",
+      title: "📄 PDF Exported!",
+      description: "Your itinerary has been downloaded as PDF.",
     });
   };
 
@@ -138,15 +175,22 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
 
         {/* Action buttons */}
         <div className="flex flex-wrap justify-center gap-3 mt-4">
-          <Button 
-            onClick={handleSave} 
-            variant="default" 
-            className="gap-2"
-            disabled={isSaving || !!savedItineraryId}
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? "Saving..." : savedItineraryId ? "Saved!" : "Save Itinerary"}
-          </Button>
+          {!savedItineraryId ? (
+            <Button 
+              onClick={handleSave} 
+              variant="default" 
+              className="gap-2"
+              disabled={isSaving}
+            >
+              <Save className="w-4 h-4" />
+              {isSaving ? "Saving..." : "Save Itinerary"}
+            </Button>
+          ) : (
+            <Button onClick={handlePDFExport} variant="outline" className="gap-2">
+              <FileDown className="w-4 h-4" />
+              Export PDF
+            </Button>
+          )}
           <Button 
             onClick={handleShare} 
             variant="outline" 
@@ -154,10 +198,6 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
           >
             <Share2 className="w-4 h-4" />
             Share
-          </Button>
-          <Button onClick={handleDownload} variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Download JSON
           </Button>
         </div>
       </div>
