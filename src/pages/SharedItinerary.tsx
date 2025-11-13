@@ -41,6 +41,23 @@ const SharedItinerary = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
+  // Calculate total budget
+  const calculateTotalBudget = (itineraryData: ItineraryData) => {
+    let total = 0;
+    itineraryData.itinerary_data.days.forEach(day => {
+      day.items.forEach(item => {
+        if (item.cost) {
+          const costMatch = item.cost.match(/[\d,]+/);
+          if (costMatch) {
+            const numericCost = parseFloat(costMatch[0].replace(/,/g, ''));
+            total += numericCost;
+          }
+        }
+      });
+    });
+    return total;
+  };
+
   useEffect(() => {
     const fetchItinerary = async () => {
       if (!id) {
@@ -121,6 +138,31 @@ const SharedItinerary = () => {
                 {itinerary.travelers} traveler(s) • {itinerary.budget} budget • {itinerary.interests}
               </p>
             </div>
+
+            {/* Budget Summary */}
+            {(() => {
+              const totalBudget = calculateTotalBudget(itinerary);
+              const budgetPerPerson = totalBudget / itinerary.travelers;
+              return totalBudget > 0 ? (
+                <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-6 shadow-sm mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground font-medium">Estimated Total Budget</p>
+                      <p className="text-2xl font-bold text-foreground mt-1">${totalBudget.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground font-medium">Per Person</p>
+                      <p className="text-2xl font-bold text-primary mt-1">${budgetPerPerson.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {itinerary.travelers > 1 && (
+                    <p className="text-xs text-muted-foreground mt-3 text-center">
+                      Based on {itinerary.travelers} travelers
+                    </p>
+                  )}
+                </div>
+              ) : null;
+            })()}
 
             {/* Weather widget */}
             <WeatherWidget destination={itinerary.destination} date={itinerary.start_date} />
