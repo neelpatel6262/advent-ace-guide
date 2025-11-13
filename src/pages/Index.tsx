@@ -185,12 +185,6 @@ const Index = () => {
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="py-8 text-center text-muted-foreground border-t bg-card/50 backdrop-blur-sm">
-        <p className="text-sm font-medium">
-          Powered by AI • Built with ❤️ for travelers
-        </p>
-      </footer>
     </div>
   );
 };
