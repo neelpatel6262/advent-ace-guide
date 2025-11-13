@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin, Sparkles, Users } from "lucide-react";
+import { Calendar, ChevronDown, MapPin, Sparkles, Users } from "lucide-react";
 
 interface ItineraryFormProps {
   onGenerate: (data: FormData) => void;
@@ -106,17 +106,20 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
 
           <div className="space-y-2">
             <Label htmlFor="budget" className="text-sm font-semibold">Travel Budget</Label>
-            <select
-              id="budget"
-              value={formData.budget}
-              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-              className="w-full h-11 px-3 rounded-md border-2 border-input bg-background text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring font-medium"
-              required
-            >
-              <option value="budget">Budget-Friendly</option>
-              <option value="moderate">Moderate</option>
-              <option value="luxury">Luxury</option>
-            </select>
+            <div className="relative">
+              <select
+                id="budget"
+                value={formData.budget}
+                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                className="w-full h-11 px-3 pr-10 rounded-md border-2 border-input bg-background text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring font-medium appearance-none cursor-pointer"
+                required
+              >
+                <option value="budget">Budget-Friendly</option>
+                <option value="moderate">Moderate</option>
+                <option value="luxury">Luxury</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -136,7 +139,7 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
 
           <Button 
             type="submit" 
-            variant="hero" 
+            variant="default" 
             size="lg" 
             className="w-full h-12 text-base font-bold"
             disabled={isLoading}
