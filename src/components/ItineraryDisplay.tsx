@@ -52,6 +52,27 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Calculate total budget
+  const calculateTotalBudget = () => {
+    let total = 0;
+    itineraryData.days.forEach(day => {
+      day.items.forEach(item => {
+        if (item.cost) {
+          const costMatch = item.cost.match(/[\d,]+/);
+          if (costMatch) {
+            const numericCost = parseFloat(costMatch[0].replace(/,/g, ''));
+            total += numericCost;
+          }
+        }
+      });
+    });
+    return total;
+  };
+
+  const totalBudget = calculateTotalBudget();
+  const budgetPerPerson = totalBudget / parseInt(formData.travelers);
+  const travelers = parseInt(formData.travelers);
+
   const handleSave = async () => {
     setIsSaving(true);
     
@@ -201,6 +222,27 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
           </Button>
         </div>
       </div>
+
+      {/* Budget Summary */}
+      {totalBudget > 0 && (
+        <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Estimated Total Budget</p>
+              <p className="text-2xl font-bold text-foreground mt-1">${totalBudget.toLocaleString()}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground font-medium">Per Person</p>
+              <p className="text-2xl font-bold text-primary mt-1">${budgetPerPerson.toLocaleString()}</p>
+            </div>
+          </div>
+          {travelers > 1 && (
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              Based on {travelers} travelers
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Weather widget */}
       <WeatherWidget destination={itineraryData.destination} date={formData.startDate} />
