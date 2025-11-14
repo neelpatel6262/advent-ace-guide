@@ -225,15 +225,15 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
 
       {/* Budget Summary */}
       {totalBudget > 0 && (
-        <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="w-full sm:w-auto">
               <p className="text-sm text-muted-foreground font-medium">Estimated Total Budget</p>
-              <p className="text-2xl font-bold text-foreground mt-1">₹{totalBudget.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">₹{totalBudget.toLocaleString()}</p>
             </div>
-            <div className="text-right">
+            <div className="w-full sm:w-auto sm:text-right">
               <p className="text-sm text-muted-foreground font-medium">Per Person</p>
-              <p className="text-2xl font-bold text-primary mt-1">₹{budgetPerPerson.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary mt-1">₹{budgetPerPerson.toLocaleString()}</p>
             </div>
           </div>
           {travelers > 1 && (

@@ -111,41 +111,41 @@ export const ItineraryCard = ({ dayData, onSave, isFavorite }: ItineraryCardProp
                 {/* Header with title and badge */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {IconComponent && <IconComponent className="w-4 h-4 text-primary flex-shrink-0" />}
-                      {iconEmoji && <span className="text-lg">{iconEmoji}</span>}
-                      <h3 className="font-semibold text-lg truncate">{item.title}</h3>
+                    <div className="flex items-start gap-2 mb-1">
+                      {IconComponent && <IconComponent className="w-4 h-4 text-primary flex-shrink-0 mt-1" />}
+                      {iconEmoji && <span className="text-lg flex-shrink-0">{iconEmoji}</span>}
+                      <h3 className="font-semibold text-base sm:text-lg break-words">{item.title}</h3>
                     </div>
                   </div>
-                  <Badge variant="outline" className={cn("flex-shrink-0 border-2", typeColors[item.type])}>
+                  <Badge variant="outline" className={cn("flex-shrink-0 border-2 text-xs", typeColors[item.type])}>
                     {item.type}
                   </Badge>
                 </div>
 
                 {/* Time, location, cost */}
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock className="w-4 h-4 text-primary" />
-                    <span className="font-medium">
+                <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 text-muted-foreground min-w-fit">
+                    <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="font-medium whitespace-nowrap">
                       {item.timeStart}{item.timeEnd ? ` - ${item.timeEnd}` : ""}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <MapPin className="w-4 h-4 text-secondary" />
-                    <span className="font-medium">{item.location}</span>
+                  <div className="flex items-start gap-1.5 text-muted-foreground flex-1 min-w-0">
+                    <MapPin className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span className="font-medium break-words">{item.location}</span>
                   </div>
                   
                   {item.cost && (
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <DollarSign className="w-4 h-4 text-accent" />
-                      <span className="font-medium">{item.cost}</span>
+                    <div className="flex items-center gap-1.5 text-muted-foreground min-w-fit">
+                      <DollarSign className="w-4 h-4 text-accent flex-shrink-0" />
+                      <span className="font-medium whitespace-nowrap">{item.cost}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-foreground leading-relaxed">{item.description}</p>
+                <p className="text-sm text-foreground leading-relaxed break-words">{item.description}</p>
 
                 {/* Highlights */}
                 {item.highlights && item.highlights.length > 0 && (
