@@ -90,7 +90,7 @@ Interests: ${interests}
 Rules:
 - For each day, produce 3–5 items following this sequence when possible: Morning activity, Midday activity, Meal, Afternoon/Evening activity.
 - Include realistic times (e.g., 09:00–11:00), location names, short descriptions, and 2–4 bullet highlights.
-- Costs should be concise (e.g., "$15", "€20–30", "Free").
+- Costs should be concise in Indian Rupees (e.g., "₹600", "₹1000-1500", "Free").
 - Optimize for minimal backtracking between locations.
 - Use local, authentic options aligned to the budget.
 `;
