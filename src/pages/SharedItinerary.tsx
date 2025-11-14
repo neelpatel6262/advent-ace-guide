@@ -148,11 +148,11 @@ const SharedItinerary = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground font-medium">Estimated Total Budget</p>
-                      <p className="text-2xl font-bold text-foreground mt-1">${totalBudget.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-foreground mt-1">₹{totalBudget.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground font-medium">Per Person</p>
-                      <p className="text-2xl font-bold text-primary mt-1">${budgetPerPerson.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-primary mt-1">₹{budgetPerPerson.toLocaleString()}</p>
                     </div>
                   </div>
                   {itinerary.travelers > 1 && (
