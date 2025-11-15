@@ -123,25 +123,27 @@ export const ItineraryCard = ({ dayData, onSave, isFavorite }: ItineraryCardProp
                 </div>
 
                 {/* Time, location, cost */}
-                <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
-                  <div className="flex items-center gap-1.5 text-muted-foreground min-w-fit">
-                    <Clock className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">
-                      {item.timeStart}{item.timeEnd ? ` - ${item.timeEnd}` : ""}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-start gap-1.5 text-muted-foreground flex-1 min-w-0">
-                    <MapPin className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
-                    <span className="font-medium break-words">{item.location}</span>
-                  </div>
-                  
-                  {item.cost && (
-                    <div className="flex items-center gap-1.5 text-muted-foreground min-w-fit">
-                      <DollarSign className="w-4 h-4 text-accent flex-shrink-0" />
-                      <span className="font-medium whitespace-nowrap">{item.cost}</span>
+                <div className="flex flex-col gap-2 text-xs sm:text-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="font-medium whitespace-nowrap">
+                        {item.timeStart}{item.timeEnd ? ` - ${item.timeEnd}` : ""}
+                      </span>
                     </div>
-                  )}
+                    
+                    {item.cost && (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <DollarSign className="w-4 h-4 text-accent flex-shrink-0" />
+                        <span className="font-medium whitespace-nowrap">{item.cost}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-start gap-1.5 text-muted-foreground">
+                    <MapPin className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                    <span className="font-medium break-words leading-relaxed">{item.location}</span>
+                  </div>
                 </div>
 
                 {/* Description */}
