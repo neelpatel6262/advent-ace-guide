@@ -59,6 +59,203 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_segments: {
+        Row: {
+          arrival_time: string | null
+          booking_link: string | null
+          carbon_kg: number | null
+          cost: number | null
+          created_at: string | null
+          departure_time: string | null
+          duration_minutes: number | null
+          from_location: string
+          id: string
+          luggage_policy: string | null
+          notes: string | null
+          provider_name: string | null
+          route_id: string | null
+          segment_order: number
+          to_location: string
+          transport_type: string
+        }
+        Insert: {
+          arrival_time?: string | null
+          booking_link?: string | null
+          carbon_kg?: number | null
+          cost?: number | null
+          created_at?: string | null
+          departure_time?: string | null
+          duration_minutes?: number | null
+          from_location: string
+          id?: string
+          luggage_policy?: string | null
+          notes?: string | null
+          provider_name?: string | null
+          route_id?: string | null
+          segment_order: number
+          to_location: string
+          transport_type: string
+        }
+        Update: {
+          arrival_time?: string | null
+          booking_link?: string | null
+          carbon_kg?: number | null
+          cost?: number | null
+          created_at?: string | null
+          departure_time?: string | null
+          duration_minutes?: number | null
+          from_location?: string
+          id?: string
+          luggage_policy?: string | null
+          notes?: string | null
+          provider_name?: string | null
+          route_id?: string | null
+          segment_order?: number
+          to_location?: string
+          transport_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_segments_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "multi_transport_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      multi_transport_routes: {
+        Row: {
+          carbon_footprint_kg: number | null
+          comfort_rating: number | null
+          created_at: string | null
+          destination_coordinates: Json | null
+          destination_location: string
+          id: string
+          initial_transit_time_minutes: number | null
+          is_recommended: boolean | null
+          itinerary_id: string | null
+          journey_segments: Json | null
+          num_transfers: number | null
+          origin_coordinates: Json | null
+          origin_location: string
+          route_type: string | null
+          starting_address: string
+          starting_coordinates: Json | null
+          starting_location_id: string | null
+          total_cost: number | null
+          total_duration_including_start: number | null
+          total_duration_minutes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          carbon_footprint_kg?: number | null
+          comfort_rating?: number | null
+          created_at?: string | null
+          destination_coordinates?: Json | null
+          destination_location: string
+          id?: string
+          initial_transit_time_minutes?: number | null
+          is_recommended?: boolean | null
+          itinerary_id?: string | null
+          journey_segments?: Json | null
+          num_transfers?: number | null
+          origin_coordinates?: Json | null
+          origin_location: string
+          route_type?: string | null
+          starting_address: string
+          starting_coordinates?: Json | null
+          starting_location_id?: string | null
+          total_cost?: number | null
+          total_duration_including_start?: number | null
+          total_duration_minutes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          carbon_footprint_kg?: number | null
+          comfort_rating?: number | null
+          created_at?: string | null
+          destination_coordinates?: Json | null
+          destination_location?: string
+          id?: string
+          initial_transit_time_minutes?: number | null
+          is_recommended?: boolean | null
+          itinerary_id?: string | null
+          journey_segments?: Json | null
+          num_transfers?: number | null
+          origin_coordinates?: Json | null
+          origin_location?: string
+          route_type?: string | null
+          starting_address?: string
+          starting_coordinates?: Json | null
+          starting_location_id?: string | null
+          total_cost?: number | null
+          total_duration_including_start?: number | null
+          total_duration_minutes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "multi_transport_routes_itinerary_id_fkey"
+            columns: ["itinerary_id"]
+            isOneToOne: false
+            referencedRelation: "itineraries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "multi_transport_routes_starting_location_id_fkey"
+            columns: ["starting_location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_locations: {
+        Row: {
+          address: string
+          city: string | null
+          country: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          latitude: number | null
+          location_name: string
+          location_type: string | null
+          longitude: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address: string
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          location_name: string
+          location_type?: string | null
+          longitude?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          latitude?: number | null
+          location_name?: string
+          location_type?: string | null
+          longitude?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
