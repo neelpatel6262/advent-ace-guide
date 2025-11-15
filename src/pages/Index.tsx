@@ -141,20 +141,13 @@ const Index = () => {
           <p className="text-lg md:text-xl text-white/95 drop-shadow-lg max-w-2xl mx-auto font-medium leading-relaxed">
             Your personal AI travel planner. Create perfect itineraries in seconds, tailored to your dreams.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Link to="/multi-transport">
-              <Button variant="default" size="lg" className="min-w-[200px]">
-                🚆 Multi-Transport Planner
+          {!session && (
+            <Link to="/auth">
+              <Button variant="secondary" size="lg" className="mt-4">
+                Sign In to Save Itineraries
               </Button>
             </Link>
-            {!session && (
-              <Link to="/auth">
-                <Button variant="secondary" size="lg">
-                  Sign In to Save Itineraries
-                </Button>
-              </Link>
-            )}
-          </div>
+          )}
         </div>
       </section>
 
