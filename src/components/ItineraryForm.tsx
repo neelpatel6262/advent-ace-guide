@@ -12,6 +12,7 @@ interface ItineraryFormProps {
 }
 
 export interface FormData {
+  origin: string;
   destination: string;
   startDate: string;
   endDate: string;
@@ -23,6 +24,7 @@ export interface FormData {
 
 export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => {
   const [formData, setFormData] = useState<FormData>({
+    origin: "",
     destination: "",
     startDate: "",
     endDate: "",
@@ -41,6 +43,21 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
     <Card className="w-full max-w-2xl mx-auto shadow-[var(--shadow-ocean)] border-2">
       <CardContent className="pt-8 pb-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="origin" className="flex items-center gap-2 text-sm font-semibold">
+              <MapPin className="w-4 h-4 text-secondary" />
+              Departing From
+            </Label>
+            <Input
+              id="origin"
+              placeholder="e.g., Mumbai, Delhi, Bangalore"
+              value={formData.origin}
+              onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+              required
+              className="text-base h-11"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="destination" className="flex items-center gap-2 text-sm font-semibold">
               <MapPin className="w-4 h-4 text-primary" />
