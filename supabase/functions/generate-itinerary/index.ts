@@ -12,6 +12,7 @@ type GenerateBody = {
   travelers: string | number;
   interests: string;
   budget: string;
+  transportMode?: string;
 };
 
 serve(async (req) => {
@@ -20,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { destination, startDate, endDate, travelers, interests, budget } = (await req.json()) as GenerateBody;
+    const { destination, startDate, endDate, travelers, interests, budget, transportMode } = (await req.json()) as GenerateBody;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -85,12 +86,14 @@ serve(async (req) => {
     const userPrompt = `Create a ${days}-day itinerary for ${destination} for ${travelers} traveler(s).
 Dates: ${startDate} to ${endDate}
 Budget: ${budget}
+Preferred Transport: ${transportMode || 'any'}
 Interests: ${interests}
 
 Rules:
 - For each day, produce 3–5 items following this sequence when possible: Morning activity, Midday activity, Meal, Afternoon/Evening activity.
 - Include realistic times (e.g., 09:00–11:00), location names, short descriptions, and 2–4 bullet highlights.
 - Costs should be concise in Indian Rupees (e.g., "₹600", "₹1000-1500", "Free").
+- When suggesting transport between locations, prefer ${transportMode || 'any available'} mode of transport.
 - Optimize for minimal backtracking between locations.
 - Use local, authentic options aligned to the budget.
 `;
