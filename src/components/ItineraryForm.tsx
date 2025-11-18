@@ -40,7 +40,7 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-[var(--shadow-ocean)] border-2">
+    <Card className="w-full max-w-2xl mx-auto shadow-[var(--shadow-primary)] border-2">
       <CardContent className="pt-8 pb-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

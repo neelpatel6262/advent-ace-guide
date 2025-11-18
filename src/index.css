@@ -8,104 +8,106 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Travel-inspired color palette with improved contrast */
+    /* TripCraft AI - Modern travel & AI inspired palette */
     --background: 0 0% 100%;
-    --foreground: 220 60% 10%;
+    --foreground: 240 15% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 60% 10%;
+    --card-foreground: 240 15% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 60% 10%;
+    --popover-foreground: 240 15% 12%;
 
-    /* Ocean blue primary with better contrast */
-    --primary: 217 91% 55%;
+    /* Deep Purple/Indigo - AI & Innovation */
+    --primary: 261 75% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 199 89% 45%;
+    --primary-glow: 270 80% 65%;
 
-    /* Sunset coral secondary */
-    --secondary: 24 95% 50%;
+    /* Warm Coral - Adventure & Warmth */
+    --secondary: 16 90% 62%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Soft muted tones with improved readability */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 25% 35%;
+    /* Soft muted tones */
+    --muted: 250 20% 96%;
+    --muted-foreground: 240 10% 40%;
 
-    /* Adventure green accent */
-    --accent: 142 76% 36%;
+    /* Teal Accent - Journey & Trust */
+    --accent: 185 70% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 88%;
-    --ring: 217 91% 55%;
+    --border: 250 15% 90%;
+    --input: 250 15% 90%;
+    --ring: 261 75% 58%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Gradients for beautiful backgrounds */
-    --gradient-ocean: linear-gradient(135deg, hsl(217 91% 55%) 0%, hsl(199 89% 45%) 100%);
-    --gradient-sunset: linear-gradient(135deg, hsl(24 95% 50%) 0%, hsl(340 82% 52%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(217 91% 98%) 100%);
+    /* Dreamy AI gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(261 75% 58%) 0%, hsl(270 80% 65%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(16 90% 62%) 0%, hsl(340 82% 58%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(261 75% 98%) 0%, hsl(185 70% 96%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(185 70% 52%) 0%, hsl(261 75% 58%) 100%);
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%);
     
-    /* Shadows with color */
-    --shadow-ocean: 0 10px 40px -10px hsl(217 91% 55% / 0.4);
-    --shadow-sunset: 0 10px 40px -10px hsl(24 95% 50% / 0.4);
-    --shadow-glow: 0 0 60px hsl(217 91% 55% / 0.2);
+    /* Colored shadows for depth */
+    --shadow-primary: 0 10px 40px -10px hsl(261 75% 58% / 0.35);
+    --shadow-secondary: 0 10px 40px -10px hsl(16 90% 62% / 0.35);
+    --shadow-accent: 0 10px 40px -10px hsl(185 70% 52% / 0.3);
+    --shadow-glow: 0 0 60px hsl(261 75% 58% / 0.15);
     
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 8% 20%;
-    --sidebar-primary: 217 91% 55%;
+    --sidebar-foreground: 240 15% 12%;
+    --sidebar-primary: 261 75% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 217 91% 55%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 55%;
+    --sidebar-accent: 250 20% 96%;
+    --sidebar-accent-foreground: 261 75% 58%;
+    --sidebar-border: 250 15% 90%;
+    --sidebar-ring: 261 75% 58%;
   }
 
   .dark {
-    --background: 220 50% 6%;
-    --foreground: 210 40% 98%;
+    --background: 240 20% 8%;
+    --foreground: 250 20% 96%;
 
-    --card: 220 45% 9%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 18% 11%;
+    --card-foreground: 250 20% 96%;
 
-    --popover: 220 45% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 18% 11%;
+    --popover-foreground: 250 20% 96%;
 
-    --primary: 217 91% 60%;
+    --primary: 270 80% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 95% 53%;
+    --secondary: 16 90% 62%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 217 40% 15%;
-    --muted-foreground: 215 25% 70%;
+    --muted: 240 15% 16%;
+    --muted-foreground: 250 10% 70%;
 
-    --accent: 142 76% 36%;
+    --accent: 185 70% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 40% 15%;
-    --input: 217 40% 15%;
-    --ring: 217 91% 60%;
+    --border: 240 15% 16%;
+    --input: 240 15% 16%;
+    --ring: 270 80% 65%;
     
-    --sidebar-background: 220 50% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-background: 240 20% 8%;
+    --sidebar-foreground: 250 20% 96%;
+    --sidebar-primary: 270 80% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 40% 15%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 40% 15%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 240 15% 16%;
+    --sidebar-accent-foreground: 250 20% 96%;
+    --sidebar-border: 240 15% 16%;
+    --sidebar-ring: 270 80% 65%;
   }
 }
 
