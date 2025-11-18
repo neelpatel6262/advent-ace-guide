@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, ChevronDown, MapPin, Sparkles, Users, CarFront } from "lucide-react";
+import { Calendar, ChevronDown, MapPin, Sparkles, Users, CarFront, Locate } from "lucide-react";
+import { toast } from "sonner";
 
 interface ItineraryFormProps {
   onGenerate: (data: FormData) => void;
@@ -33,6 +34,71 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
     budget: "moderate",
     transportMode: "any",
   });
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
+  useEffect(() => {
+    // Automatically try to detect location on mount
+    detectLocation();
+  }, []);
+
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      return;
+    }
+
+    setIsDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          // Reverse geocoding using OpenStreetMap Nominatim API
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+            {
+              headers: {
+                'User-Agent': 'TripCraft-AI'
+              }
+            }
+          );
+          
+          const data = await response.json();
+          
+          // Extract city and state/country
+          const address = data.address;
+          const city = address.city || address.town || address.village || address.county;
+          const state = address.state;
+          const country = address.country;
+          
+          let locationString = "";
+          if (city && state) {
+            locationString = `${city}, ${state}`;
+          } else if (city && country) {
+            locationString = `${city}, ${country}`;
+          } else if (city) {
+            locationString = city;
+          }
+          
+          if (locationString) {
+            setFormData(prev => ({ ...prev, origin: locationString }));
+            toast.success("Location detected successfully");
+          }
+        } catch (error) {
+          console.error("Reverse geocoding error:", error);
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        setIsDetectingLocation(false);
+        // Silently fail if permission denied - user can enter manually
+        if (error.code === error.PERMISSION_DENIED) {
+          console.log("Location permission denied");
+        }
+      }
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +114,27 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
               <MapPin className="w-4 h-4 text-secondary" />
               Departing From
             </Label>
-            <Input
-              id="origin"
-              placeholder="e.g., Mumbai, Delhi, Bangalore"
-              value={formData.origin}
-              onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
-              required
-              className="text-base h-11"
-            />
+            <div className="relative">
+              <Input
+                id="origin"
+                placeholder="e.g., Mumbai, Delhi, Bangalore"
+                value={formData.origin}
+                onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+                required
+                className="text-base h-11 pr-11"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9"
+                onClick={detectLocation}
+                disabled={isDetectingLocation}
+                title="Detect my location"
+              >
+                <Locate className={`w-4 h-4 ${isDetectingLocation ? 'animate-pulse' : ''}`} />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
