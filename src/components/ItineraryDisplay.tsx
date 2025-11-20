@@ -27,9 +27,16 @@ interface DayData {
   items: ItineraryItem[];
 }
 
+interface TransportComparison {
+  flight?: { cost: string; duration: string };
+  train?: { cost: string; duration: string };
+  bus?: { cost: string; duration: string };
+}
+
 interface ItineraryJSON {
   destination: string;
   days: DayData[];
+  transportComparison?: TransportComparison;
   raw?: string;
 }
 
@@ -241,6 +248,46 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
               Based on {travelers} travelers
             </p>
           )}
+        </div>
+      )}
+
+      {/* Transport Cost Comparison */}
+      {itineraryData.transportComparison && (
+        <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-4 sm:p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Transport Options</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {itineraryData.transportComparison.flight && (
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">✈️</span>
+                  <span className="font-semibold text-foreground">Flight</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">Duration: {itineraryData.transportComparison.flight.duration}</p>
+                <p className="text-lg font-bold text-primary">{itineraryData.transportComparison.flight.cost}</p>
+              </div>
+            )}
+            {itineraryData.transportComparison.train && (
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🚂</span>
+                  <span className="font-semibold text-foreground">Train</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">Duration: {itineraryData.transportComparison.train.duration}</p>
+                <p className="text-lg font-bold text-primary">{itineraryData.transportComparison.train.cost}</p>
+              </div>
+            )}
+            {itineraryData.transportComparison.bus && (
+              <div className="bg-background/50 rounded-lg p-4 border">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🚌</span>
+                  <span className="font-semibold text-foreground">Bus</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">Duration: {itineraryData.transportComparison.bus.duration}</p>
+                <p className="text-lg font-bold text-primary">{itineraryData.transportComparison.bus.cost}</p>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">One-way per person estimates</p>
         </div>
       )}
 

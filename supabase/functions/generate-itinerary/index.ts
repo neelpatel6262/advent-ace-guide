@@ -45,6 +45,16 @@ serve(async (req) => {
             type: "object",
             properties: {
               destination: { type: "string" },
+              transportComparison: {
+                type: "object",
+                description: "Estimated cost comparison for main transport from origin to destination",
+                properties: {
+                  flight: { type: "object", properties: { cost: { type: "string" }, duration: { type: "string" } } },
+                  train: { type: "object", properties: { cost: { type: "string" }, duration: { type: "string" } } },
+                  bus: { type: "object", properties: { cost: { type: "string" }, duration: { type: "string" } } },
+                },
+                nullable: true
+              },
               days: {
                 type: "array",
                 items: {
@@ -98,6 +108,7 @@ Rules:
 - Consider the journey from ${origin || 'origin'} to ${destination} when planning transport options.
 - Optimize for minimal backtracking between locations.
 - Use local, authentic options aligned to the budget.
+- Provide a transportComparison object with estimated costs and durations for flight, train, and bus travel from ${origin || 'origin'} to ${destination} (one-way per person). Include realistic estimates based on the route and distance.
 `;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

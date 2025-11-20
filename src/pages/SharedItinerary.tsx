@@ -8,6 +8,12 @@ import { ErrorState } from "@/components/ErrorState";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plane } from "lucide-react";
 
+interface TransportComparison {
+  flight?: { cost: string; duration: string };
+  train?: { cost: string; duration: string };
+  bus?: { cost: string; duration: string };
+}
+
 interface ItineraryData {
   destination: string;
   start_date: string;
@@ -17,6 +23,7 @@ interface ItineraryData {
   interests: string;
   itinerary_data: {
     destination: string;
+    transportComparison?: TransportComparison;
     days: Array<{
       day: number;
       date?: string;
@@ -163,6 +170,46 @@ const SharedItinerary = () => {
                 </div>
               ) : null;
             })()}
+
+            {/* Transport Cost Comparison */}
+            {itinerary.itinerary_data.transportComparison && (
+              <div className="bg-card/50 backdrop-blur-sm border rounded-lg p-4 sm:p-6 shadow-sm mb-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Transport Options</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {itinerary.itinerary_data.transportComparison.flight && (
+                    <div className="bg-background/50 rounded-lg p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">✈️</span>
+                        <span className="font-semibold text-foreground">Flight</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">Duration: {itinerary.itinerary_data.transportComparison.flight.duration}</p>
+                      <p className="text-lg font-bold text-primary">{itinerary.itinerary_data.transportComparison.flight.cost}</p>
+                    </div>
+                  )}
+                  {itinerary.itinerary_data.transportComparison.train && (
+                    <div className="bg-background/50 rounded-lg p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">🚂</span>
+                        <span className="font-semibold text-foreground">Train</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">Duration: {itinerary.itinerary_data.transportComparison.train.duration}</p>
+                      <p className="text-lg font-bold text-primary">{itinerary.itinerary_data.transportComparison.train.cost}</p>
+                    </div>
+                  )}
+                  {itinerary.itinerary_data.transportComparison.bus && (
+                    <div className="bg-background/50 rounded-lg p-4 border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">🚌</span>
+                        <span className="font-semibold text-foreground">Bus</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">Duration: {itinerary.itinerary_data.transportComparison.bus.duration}</p>
+                      <p className="text-lg font-bold text-primary">{itinerary.itinerary_data.transportComparison.bus.cost}</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-3 text-center">One-way per person estimates</p>
+              </div>
+            )}
 
             {/* Weather widget */}
             <WeatherWidget destination={itinerary.destination} date={itinerary.start_date} />
