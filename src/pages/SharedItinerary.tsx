@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ItineraryCard } from "@/components/ItineraryCard";
 import { WeatherWidget } from "@/components/WeatherWidget";
+import ItineraryMap from "@/components/ItineraryMap";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { Button } from "@/components/ui/button";
@@ -213,6 +214,18 @@ const SharedItinerary = () => {
 
             {/* Weather widget */}
             <WeatherWidget destination={itinerary.destination} date={itinerary.start_date} />
+
+            {/* Map */}
+            <ItineraryMap 
+              destination={itinerary.destination}
+              locations={itinerary.itinerary_data.days.flatMap(day => 
+                day.items.map(item => ({
+                  name: item.location,
+                  day: day.day,
+                  type: item.type
+                }))
+              )}
+            />
 
             {/* Days */}
             <div className="space-y-6">
