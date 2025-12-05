@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,13 +16,26 @@ interface ItineraryMapProps {
   locations: Location[];
 }
 
+interface MarkerData {
+  marker: mapboxgl.Marker;
+  day: number;
+}
+
 const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<MarkerData[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [is3D, setIs3D] = useState(false);
   const [isSatellite, setIsSatellite] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  // Get unique days from locations
+  const days = useMemo(() => {
+    const uniqueDays = [...new Set(locations.map(loc => loc.day))].sort((a, b) => a - b);
+    return uniqueDays;
+  }, [locations]);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -41,6 +54,18 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
 
     fetchToken();
   }, []);
+
+  // Update marker visibility when selectedDay changes
+  useEffect(() => {
+    markersRef.current.forEach(({ marker, day }) => {
+      const element = marker.getElement();
+      if (selectedDay === null || day === selectedDay) {
+        element.style.display = 'flex';
+      } else {
+        element.style.display = 'none';
+      }
+    });
+  }, [selectedDay]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken || map.current) return;
@@ -108,6 +133,10 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
 
           const geocodedLocations = (await Promise.all(geocodePromises)).filter((item): item is { location: Location; coordinates: [number, number] } => item !== null);
 
+          // Clear existing markers
+          markersRef.current.forEach(({ marker }) => marker.remove());
+          markersRef.current = [];
+
           // Add markers
           geocodedLocations.forEach((item) => {
             if (!map.current) return;
@@ -140,10 +169,12 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
               </div>`
             );
 
-            new mapboxgl.Marker(el)
+            const marker = new mapboxgl.Marker(el)
               .setLngLat(coordinates)
               .setPopup(popup)
               .addTo(map.current!);
+
+            markersRef.current.push({ marker, day: location.day });
           });
 
           // Fit map to show all markers
@@ -172,12 +203,10 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
     if (!map.current) return;
     
     if (is3D) {
-      // Disable 3D terrain
       map.current.setTerrain(null);
       map.current.setPitch(0);
       map.current.setBearing(0);
     } else {
-      // Enable 3D terrain
       map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
       map.current.setPitch(60);
       map.current.setBearing(-20);
@@ -195,7 +224,6 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
     
     map.current.setStyle(newStyle);
     
-    // Re-add terrain source after style change
     map.current.once('style.load', () => {
       if (!map.current) return;
       map.current.addSource('mapbox-dem', {
@@ -205,7 +233,6 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
         maxzoom: 14
       });
       
-      // Re-apply 3D terrain if it was enabled
       if (is3D) {
         map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
       }
@@ -245,32 +272,58 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
 
   return (
     <div className="bg-card/50 backdrop-blur-sm border rounded-lg shadow-sm overflow-hidden">
-      <div className="p-4 border-b flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Itinerary Map</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Explore your journey locations and daily activities
-          </p>
+      <div className="p-4 border-b flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Itinerary Map</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Explore your journey locations and daily activities
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={isSatellite ? "default" : "outline"}
+              size="sm"
+              onClick={toggleSatellite}
+              className="flex items-center gap-2"
+            >
+              <Satellite className="h-4 w-4" />
+              <span className="hidden sm:inline">{isSatellite ? "Streets" : "Satellite"}</span>
+            </Button>
+            <Button
+              variant={is3D ? "default" : "outline"}
+              size="sm"
+              onClick={toggle3DTerrain}
+              className="flex items-center gap-2"
+            >
+              {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
+              <span className="hidden sm:inline">{is3D ? "2D View" : "3D Terrain"}</span>
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        
+        {/* Day filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-muted-foreground">Filter by day:</span>
           <Button
-            variant={isSatellite ? "default" : "outline"}
+            variant={selectedDay === null ? "default" : "outline"}
             size="sm"
-            onClick={toggleSatellite}
-            className="flex items-center gap-2"
+            onClick={() => setSelectedDay(null)}
+            className="h-7 px-3 text-xs"
           >
-            <Satellite className="h-4 w-4" />
-            {isSatellite ? "Streets" : "Satellite"}
+            All
           </Button>
-          <Button
-            variant={is3D ? "default" : "outline"}
-            size="sm"
-            onClick={toggle3DTerrain}
-            className="flex items-center gap-2"
-          >
-            {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
-            {is3D ? "2D View" : "3D Terrain"}
-          </Button>
+          {days.map(day => (
+            <Button
+              key={day}
+              variant={selectedDay === day ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedDay(day)}
+              className="h-7 px-3 text-xs"
+            >
+              Day {day}
+            </Button>
+          ))}
         </div>
       </div>
       <div ref={mapContainer} className="w-full h-96" />
