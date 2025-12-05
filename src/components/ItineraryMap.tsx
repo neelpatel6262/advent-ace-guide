@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mountain, Map, Satellite } from 'lucide-react';
+import { Mountain, Map, Satellite, Maximize2, Minimize2 } from 'lucide-react';
 
 interface Location {
   name: string;
@@ -23,6 +23,7 @@ interface MarkerData {
 
 const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const mapWrapper = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<MarkerData[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string>('');
@@ -30,6 +31,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const [is3D, setIs3D] = useState(false);
   const [isSatellite, setIsSatellite] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Get unique days from locations
   const days = useMemo(() => {
@@ -241,6 +243,33 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
     setIsSatellite(!isSatellite);
   };
 
+  // Toggle fullscreen
+  const toggleFullscreen = async () => {
+    if (!mapWrapper.current) return;
+    
+    if (!document.fullscreenElement) {
+      await mapWrapper.current.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      await document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+      // Resize map when fullscreen changes
+      setTimeout(() => {
+        map.current?.resize();
+      }, 100);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const getMarkerColor = (type: string): string => {
     switch (type) {
       case 'activity':
@@ -271,7 +300,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   }
 
   return (
-    <div className="bg-card/50 backdrop-blur-sm border rounded-lg shadow-sm overflow-hidden">
+    <div ref={mapWrapper} className="bg-card/50 backdrop-blur-sm border rounded-lg shadow-sm overflow-hidden flex flex-col">
       <div className="p-4 border-b flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div>
@@ -298,6 +327,15 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             >
               {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
               <span className="hidden sm:inline">{is3D ? "2D View" : "3D Terrain"}</span>
+            </Button>
+            <Button
+              variant={isFullscreen ? "default" : "outline"}
+              size="sm"
+              onClick={toggleFullscreen}
+              className="flex items-center gap-2"
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Fullscreen"}</span>
             </Button>
           </div>
         </div>
@@ -326,7 +364,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
           ))}
         </div>
       </div>
-      <div ref={mapContainer} className="w-full h-96" />
+      <div ref={mapContainer} className={`w-full ${isFullscreen ? 'flex-1' : 'h-96'}`} />
       <div className="p-4 border-t bg-background/30">
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">
