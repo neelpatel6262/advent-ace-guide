@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Mountain, Map } from 'lucide-react';
 
 interface Location {
   name: string;
@@ -19,6 +21,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [is3D, setIs3D] = useState(false);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -56,7 +59,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
 
           // Initialize map
           map.current = new mapboxgl.Map({
-            container: mapContainer.current,
+            container: mapContainer.current!,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [lng, lat],
             zoom: 12,
@@ -65,15 +68,26 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
           // Add navigation controls
           map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+          // Add terrain source on load
+          map.current.on('load', () => {
+            if (!map.current) return;
+            map.current.addSource('mapbox-dem', {
+              type: 'raster-dem',
+              url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+              tileSize: 512,
+              maxzoom: 14
+            });
+          });
+
           // Add markers for each unique location
-          const uniqueLocations = new Map<string, Location>();
+          const uniqueLocations: Record<string, Location> = {};
           locations.forEach(loc => {
-            if (!uniqueLocations.has(loc.name)) {
-              uniqueLocations.set(loc.name, loc);
+            if (!uniqueLocations[loc.name]) {
+              uniqueLocations[loc.name] = loc;
             }
           });
 
-          const geocodePromises = Array.from(uniqueLocations.values()).map(async (location) => {
+          const geocodePromises = Object.values(uniqueLocations).map(async (location: Location) => {
             try {
               const locationQuery = `${location.name}, ${destination}`;
               const response = await fetch(
@@ -91,11 +105,11 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             return null;
           });
 
-          const geocodedLocations = (await Promise.all(geocodePromises)).filter(Boolean);
+          const geocodedLocations = (await Promise.all(geocodePromises)).filter((item): item is { location: Location; coordinates: [number, number] } => item !== null);
 
           // Add markers
           geocodedLocations.forEach((item) => {
-            if (!item || !map.current) return;
+            if (!map.current) return;
             
             const { location, coordinates } = item;
             
@@ -128,14 +142,14 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             new mapboxgl.Marker(el)
               .setLngLat(coordinates)
               .setPopup(popup)
-              .addTo(map.current);
+              .addTo(map.current!);
           });
 
           // Fit map to show all markers
           if (geocodedLocations.length > 1) {
             const bounds = new mapboxgl.LngLatBounds();
             geocodedLocations.forEach((item) => {
-              if (item) bounds.extend(item.coordinates);
+              bounds.extend(item.coordinates);
             });
             map.current.fitBounds(bounds, { padding: 50 });
           }
@@ -151,6 +165,24 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
       map.current?.remove();
     };
   }, [mapboxToken, destination, locations]);
+
+  // Toggle 3D terrain
+  const toggle3DTerrain = () => {
+    if (!map.current) return;
+    
+    if (is3D) {
+      // Disable 3D terrain
+      map.current.setTerrain(null);
+      map.current.setPitch(0);
+      map.current.setBearing(0);
+    } else {
+      // Enable 3D terrain
+      map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+      map.current.setPitch(60);
+      map.current.setBearing(-20);
+    }
+    setIs3D(!is3D);
+  };
 
   const getMarkerColor = (type: string): string => {
     switch (type) {
@@ -183,11 +215,22 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
 
   return (
     <div className="bg-card/50 backdrop-blur-sm border rounded-lg shadow-sm overflow-hidden">
-      <div className="p-4 border-b">
-        <h3 className="text-lg font-semibold text-foreground">Itinerary Map</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Explore your journey locations and daily activities
-        </p>
+      <div className="p-4 border-b flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Itinerary Map</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Explore your journey locations and daily activities
+          </p>
+        </div>
+        <Button
+          variant={is3D ? "default" : "outline"}
+          size="sm"
+          onClick={toggle3DTerrain}
+          className="flex items-center gap-2"
+        >
+          {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
+          {is3D ? "2D View" : "3D Terrain"}
+        </Button>
       </div>
       <div ref={mapContainer} className="w-full h-96" />
       <div className="p-4 border-t bg-background/30">
