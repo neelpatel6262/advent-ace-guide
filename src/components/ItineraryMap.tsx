@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mountain, Map } from 'lucide-react';
+import { Mountain, Map, Satellite } from 'lucide-react';
 
 interface Location {
   name: string;
@@ -22,6 +22,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const [mapboxToken, setMapboxToken] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [is3D, setIs3D] = useState(false);
+  const [isSatellite, setIsSatellite] = useState(false);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -184,6 +185,35 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
     setIs3D(!is3D);
   };
 
+  // Toggle satellite view
+  const toggleSatellite = () => {
+    if (!map.current) return;
+    
+    const newStyle = isSatellite 
+      ? 'mapbox://styles/mapbox/streets-v12'
+      : 'mapbox://styles/mapbox/satellite-streets-v12';
+    
+    map.current.setStyle(newStyle);
+    
+    // Re-add terrain source after style change
+    map.current.once('style.load', () => {
+      if (!map.current) return;
+      map.current.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+      
+      // Re-apply 3D terrain if it was enabled
+      if (is3D) {
+        map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+      }
+    });
+    
+    setIsSatellite(!isSatellite);
+  };
+
   const getMarkerColor = (type: string): string => {
     switch (type) {
       case 'activity':
@@ -222,15 +252,26 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             Explore your journey locations and daily activities
           </p>
         </div>
-        <Button
-          variant={is3D ? "default" : "outline"}
-          size="sm"
-          onClick={toggle3DTerrain}
-          className="flex items-center gap-2"
-        >
-          {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
-          {is3D ? "2D View" : "3D Terrain"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isSatellite ? "default" : "outline"}
+            size="sm"
+            onClick={toggleSatellite}
+            className="flex items-center gap-2"
+          >
+            <Satellite className="h-4 w-4" />
+            {isSatellite ? "Streets" : "Satellite"}
+          </Button>
+          <Button
+            variant={is3D ? "default" : "outline"}
+            size="sm"
+            onClick={toggle3DTerrain}
+            className="flex items-center gap-2"
+          >
+            {is3D ? <Map className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
+            {is3D ? "2D View" : "3D Terrain"}
+          </Button>
+        </div>
       </div>
       <div ref={mapContainer} className="w-full h-96" />
       <div className="p-4 border-t bg-background/30">
