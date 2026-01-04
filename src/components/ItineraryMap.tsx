@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mountain, Map, Satellite, Maximize2, Minimize2 } from 'lucide-react';
+import { Mountain, Map, Satellite, Maximize2, Minimize2, Route } from 'lucide-react';
 
 interface Location {
   name: string;
@@ -32,6 +32,8 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
   const [isSatellite, setIsSatellite] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showRoutes, setShowRoutes] = useState(true);
+  const routeLayersRef = useRef<string[]>([]);
 
   // Get unique days from locations
   const days = useMemo(() => {
@@ -107,15 +109,8 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             });
           });
 
-          // Add markers for each unique location
-          const uniqueLocations: Record<string, Location> = {};
-          locations.forEach(loc => {
-            if (!uniqueLocations[loc.name]) {
-              uniqueLocations[loc.name] = loc;
-            }
-          });
-
-          const geocodePromises = Object.values(uniqueLocations).map(async (location: Location) => {
+          // Geocode all locations (preserving order for routes)
+          const geocodePromises = locations.map(async (location: Location, index: number) => {
             try {
               const locationQuery = `${location.name}, ${destination}`;
               const response = await fetch(
@@ -125,7 +120,7 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
               
               if (data.features && data.features.length > 0) {
                 const [locLng, locLat] = data.features[0].center;
-                return { location, coordinates: [locLng, locLat] as [number, number] };
+                return { location, coordinates: [locLng, locLat] as [number, number], index };
               }
             } catch (error) {
               console.error(`Error geocoding ${location.name}:`, error);
@@ -133,17 +128,24 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             return null;
           });
 
-          const geocodedLocations = (await Promise.all(geocodePromises)).filter((item): item is { location: Location; coordinates: [number, number] } => item !== null);
+          const geocodedLocations = (await Promise.all(geocodePromises)).filter((item): item is { location: Location; coordinates: [number, number]; index: number } => item !== null);
 
           // Clear existing markers
           markersRef.current.forEach(({ marker }) => marker.remove());
           markersRef.current = [];
 
-          // Add markers
+          // Get unique locations for markers (avoid duplicate markers)
+          const uniqueMarkerLocations: Record<string, { location: Location; coordinates: [number, number] }> = {};
           geocodedLocations.forEach((item) => {
+            const key = `${item.coordinates[0]},${item.coordinates[1]}`;
+            if (!uniqueMarkerLocations[key]) {
+              uniqueMarkerLocations[key] = { location: item.location, coordinates: item.coordinates };
+            }
+          });
+
+          // Add markers
+          Object.values(uniqueMarkerLocations).forEach(({ location, coordinates }) => {
             if (!map.current) return;
-            
-            const { location, coordinates } = item;
             
             // Create custom marker element
             const el = document.createElement('div');
@@ -179,6 +181,27 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             markersRef.current.push({ marker, day: location.day });
           });
 
+          // Group locations by day for route drawing
+          const locationsByDay: Record<number, [number, number][]> = {};
+          geocodedLocations
+            .sort((a, b) => a.index - b.index)
+            .forEach((item) => {
+              if (!locationsByDay[item.location.day]) {
+                locationsByDay[item.location.day] = [];
+              }
+              locationsByDay[item.location.day].push(item.coordinates);
+            });
+
+          // Add route lines for each day
+          map.current.on('load', () => {
+            addRouteLayers(locationsByDay);
+          });
+
+          // If map already loaded, add routes immediately
+          if (map.current.loaded()) {
+            addRouteLayers(locationsByDay);
+          }
+
           // Fit map to show all markers
           if (geocodedLocations.length > 1) {
             const bounds = new mapboxgl.LngLatBounds();
@@ -199,6 +222,103 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
       map.current?.remove();
     };
   }, [mapboxToken, destination, locations]);
+
+  // Day colors for route lines
+  const getDayColor = (day: number): string => {
+    const colors = [
+      '#ef4444', // red
+      '#f97316', // orange
+      '#eab308', // yellow
+      '#22c55e', // green
+      '#06b6d4', // cyan
+      '#3b82f6', // blue
+      '#8b5cf6', // violet
+      '#ec4899', // pink
+    ];
+    return colors[(day - 1) % colors.length];
+  };
+
+  // Add route layers to the map
+  const addRouteLayers = (locationsByDay: Record<number, [number, number][]>) => {
+    if (!map.current) return;
+
+    // Clear existing route layers
+    routeLayersRef.current.forEach((layerId) => {
+      if (map.current?.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+      const sourceId = `route-source-${layerId.split('-').pop()}`;
+      if (map.current?.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+    });
+    routeLayersRef.current = [];
+
+    // Add new route layers
+    Object.entries(locationsByDay).forEach(([dayStr, coords]) => {
+      const day = parseInt(dayStr);
+      if (coords.length < 2 || !map.current) return;
+
+      const sourceId = `route-source-${day}`;
+      const layerId = `route-layer-${day}`;
+
+      map.current.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
+          }
+        }
+      });
+
+      map.current.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': getDayColor(day),
+          'line-width': 4,
+          'line-opacity': 0.8,
+          'line-dasharray': [2, 1]
+        }
+      });
+
+      routeLayersRef.current.push(layerId);
+    });
+  };
+
+  // Toggle routes visibility
+  const toggleRoutes = () => {
+    if (!map.current) return;
+    
+    routeLayersRef.current.forEach((layerId) => {
+      if (map.current?.getLayer(layerId)) {
+        const visibility = showRoutes ? 'none' : 'visible';
+        map.current.setLayoutProperty(layerId, 'visibility', visibility);
+      }
+    });
+    setShowRoutes(!showRoutes);
+  };
+
+  // Update route visibility when selectedDay changes
+  useEffect(() => {
+    if (!map.current) return;
+    
+    routeLayersRef.current.forEach((layerId) => {
+      if (map.current?.getLayer(layerId)) {
+        const day = parseInt(layerId.split('-').pop() || '0');
+        const shouldShow = showRoutes && (selectedDay === null || day === selectedDay);
+        map.current.setLayoutProperty(layerId, 'visibility', shouldShow ? 'visible' : 'none');
+      }
+    });
+  }, [selectedDay, showRoutes]);
 
   // Toggle 3D terrain
   const toggle3DTerrain = () => {
@@ -318,6 +438,15 @@ const ItineraryMap = ({ destination, locations }: ItineraryMapProps) => {
             >
               <Satellite className="h-4 w-4" />
               <span className="hidden sm:inline">{isSatellite ? "Streets" : "Satellite"}</span>
+            </Button>
+            <Button
+              variant={showRoutes ? "default" : "outline"}
+              size="sm"
+              onClick={toggleRoutes}
+              className="flex items-center gap-2"
+            >
+              <Route className="h-4 w-4" />
+              <span className="hidden sm:inline">Routes</span>
             </Button>
             <Button
               variant={is3D ? "default" : "outline"}
