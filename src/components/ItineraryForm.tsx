@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, ChevronDown, MapPin, Sparkles, Users, CarFront, Locate } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface ItineraryFormProps {
   onGenerate: (data: FormData) => void;
@@ -23,22 +25,94 @@ export interface FormData {
   transportMode: string;
 }
 
+const defaultFormData: FormData = {
+  origin: "",
+  destination: "",
+  startDate: "",
+  endDate: "",
+  travelers: "2",
+  interests: "",
+  budget: "moderate",
+  transportMode: "any",
+};
+
 export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => {
-  const [formData, setFormData] = useState<FormData>({
-    origin: "",
-    destination: "",
-    startDate: "",
-    endDate: "",
-    travelers: "2",
-    interests: "",
-    budget: "moderate",
-    transportMode: "any",
-  });
+  const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Load saved form data from database for logged-in users
+  useEffect(() => {
+    const loadSavedDraft = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+        const { data, error } = await supabase
+          .from("form_drafts")
+          .select("form_data")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        
+        if (data?.form_data && !error) {
+          const savedData = data.form_data as unknown as FormData;
+          setFormData(savedData);
+          toast.success("Your saved form data has been restored");
+        }
+      }
+    };
+
+    loadSavedDraft();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Auto-save form data when it changes (debounced)
+  const saveDraft = useCallback(async (data: FormData) => {
+    if (!userId) return;
+    
+    const formDataJson = data as unknown as Json;
+    
+    // First check if a draft exists
+    const { data: existing } = await supabase
+      .from("form_drafts")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    if (existing) {
+      // Update existing draft
+      await supabase
+        .from("form_drafts")
+        .update({ form_data: formDataJson, updated_at: new Date().toISOString() })
+        .eq("user_id", userId);
+    } else {
+      // Insert new draft
+      await supabase
+        .from("form_drafts")
+        .insert([{ user_id: userId, form_data: formDataJson }]);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    // Automatically try to detect location on mount
-    detectLocation();
+    if (!userId) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveDraft(formData);
+    }, 1000); // Debounce: save after 1 second of no changes
+    
+    return () => clearTimeout(timeoutId);
+  }, [formData, userId, saveDraft]);
+
+  useEffect(() => {
+    // Automatically try to detect location on mount (only if origin is empty)
+    if (!formData.origin) {
+      detectLocation();
+    }
   }, []);
 
   const detectLocation = async () => {
