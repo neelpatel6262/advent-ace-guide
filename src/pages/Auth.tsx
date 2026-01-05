@@ -8,15 +8,25 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/");
       }
     });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignIn = async (email: string, password: string) => {
@@ -81,6 +91,33 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsSocialLoading(true);
+    setError("");
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Google sign-in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Unable to sign in with Google.");
+    } finally {
+      setIsSocialLoading(false);
+    }
+  };
+
   const handleForgotPassword = () => {
     toast({
       title: "Password Reset",
@@ -92,8 +129,10 @@ const Auth = () => {
     <SignIn2
       onSignIn={handleSignIn}
       onSignUp={handleSignUp}
+      onGoogleSignIn={handleGoogleSignIn}
       onForgotPassword={handleForgotPassword}
       isLoading={isLoading}
+      isSocialLoading={isSocialLoading}
       error={error}
     />
   );
