@@ -41,6 +41,8 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
+  const [hasDraftLoaded, setHasDraftLoaded] = useState(false);
+
   // Load saved form data from database for logged-in users
   useEffect(() => {
     const loadSavedDraft = async () => {
@@ -59,6 +61,7 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
           toast.success("Your saved form data has been restored");
         }
       }
+      setHasDraftLoaded(true);
     };
 
     loadSavedDraft();
@@ -108,12 +111,12 @@ export const ItineraryForm = ({ onGenerate, isLoading }: ItineraryFormProps) => 
     return () => clearTimeout(timeoutId);
   }, [formData, userId, saveDraft]);
 
+  // Detect location only after draft has loaded and origin is still empty
   useEffect(() => {
-    // Automatically try to detect location on mount (only if origin is empty)
-    if (!formData.origin) {
+    if (hasDraftLoaded && !formData.origin) {
       detectLocation();
     }
-  }, []);
+  }, [hasDraftLoaded]);
 
   const detectLocation = async () => {
     if (!navigator.geolocation) {

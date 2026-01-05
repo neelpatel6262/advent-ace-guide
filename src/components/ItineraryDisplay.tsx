@@ -4,7 +4,6 @@ import { ItineraryCard } from "./ItineraryCard";
 import { WeatherWidget } from "./WeatherWidget";
 import { ShareModal } from "./ShareModal";
 import { AuthPromptModal } from "./AuthPromptModal";
-import ItineraryMap from "./ItineraryMap";
 import { FileDown, Share2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -294,18 +293,6 @@ export const ItineraryDisplay = ({ itineraryData, formData }: ItineraryDisplayPr
 
       {/* Weather widget */}
       <WeatherWidget destination={itineraryData.destination} date={formData.startDate} />
-
-      {/* Map */}
-      <ItineraryMap 
-        destination={itineraryData.destination}
-        locations={itineraryData.days.flatMap(day => 
-          day.items.map(item => ({
-            name: item.location,
-            day: day.day,
-            type: item.type
-          }))
-        )}
-      />
 
       {/* Days */}
       <div className="space-y-6">
