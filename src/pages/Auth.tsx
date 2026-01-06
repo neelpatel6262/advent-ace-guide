@@ -10,6 +10,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     // Set up auth state listener
@@ -32,6 +33,7 @@ const Auth = () => {
   const handleSignIn = async (email: string, password: string) => {
     setIsLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -62,6 +64,7 @@ const Auth = () => {
   const handleSignUp = async (email: string, password: string) => {
     setIsLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -94,6 +97,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsSocialLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -118,11 +122,30 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = () => {
-    toast({
-      title: "Password Reset",
-      description: "Password reset functionality coming soon.",
-    });
+  const handleForgotPassword = async (email: string) => {
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccessMessage("Check your email for the password reset link!");
+        toast({
+          title: "Reset link sent!",
+          description: "Check your email for the password reset link.",
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Unable to send reset email. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -134,6 +157,7 @@ const Auth = () => {
       isLoading={isLoading}
       isSocialLoading={isSocialLoading}
       error={error}
+      successMessage={successMessage}
     />
   );
 };
