@@ -15,14 +15,15 @@ const Auth = () => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (session && session.user.email_confirmed_at) {
+        // Only redirect if email is verified
         navigate("/");
       }
     });
 
-    // Check if user is already logged in
+    // Check if user is already logged in with verified email
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session && session.user.email_confirmed_at) {
         navigate("/");
       }
     });
@@ -36,7 +37,7 @@ const Auth = () => {
     setSuccessMessage("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -44,9 +45,18 @@ const Auth = () => {
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           setError("Email or password is incorrect. Please try again.");
+        } else if (error.message.includes("Email not confirmed")) {
+          // User exists but email not verified
+          localStorage.setItem("pendingVerificationEmail", email);
+          navigate("/verify-email");
         } else {
           setError(error.message);
         }
+      } else if (data.user && !data.user.email_confirmed_at) {
+        // User signed in but email not verified
+        localStorage.setItem("pendingVerificationEmail", email);
+        await supabase.auth.signOut();
+        navigate("/verify-email");
       } else {
         toast({
           title: "Welcome back!",
@@ -67,7 +77,7 @@ const Auth = () => {
     setSuccessMessage("");
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -81,11 +91,14 @@ const Auth = () => {
         } else {
           setError(error.message);
         }
-      } else {
+      } else if (data.user && !data.user.email_confirmed_at) {
+        // Email verification required
+        localStorage.setItem("pendingVerificationEmail", email);
         toast({
-          title: "Success!",
-          description: "Account created successfully. You can now sign in.",
+          title: "Check your email!",
+          description: "We've sent you a verification link.",
         });
+        navigate("/verify-email");
       }
     } catch (err: any) {
       setError(err.message || "Unable to create account. Please try again.");
